@@ -2,7 +2,7 @@
 
 ## 0.1.0 (2024-12-09)
 
-* feat: publih ([df6d1b0](https://github.com/vineyardbovines/openstreetmap-api/commit/df6d1b0))
+* feat: publish ([df6d1b0](https://github.com/vineyardbovines/openstreetmap-api/commit/df6d1b0))
 
 ## <small>0.0.3 (2024-12-09)</small>
 

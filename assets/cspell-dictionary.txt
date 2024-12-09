@@ -1,0 +1,8 @@
+parsedgeojson
+kumi
+skel
+updown
+bbox
+rels
+pois
+groyne

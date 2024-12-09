@@ -30,7 +30,7 @@ function buildMetaInformation(object: OverpassOSMElement): Record<string, string
   return meta;
 }
 
-function dedup<T extends OverpassOSMElement>(objectA: T, objectB: T): T {
+function dedupe<T extends OverpassOSMElement>(objectA: T, objectB: T): T {
   if ((objectA.version || objectB.version) && objectA.version !== objectB.version) {
     return +(objectA.version || 0) > +(objectB.version || 0) ? objectA : objectB;
   }
@@ -62,7 +62,7 @@ export function osm2geojson(
 
   for (let node of nodes) {
     if (nodeIds[node.id]) {
-      node = dedup<OverpassNode>(node, nodeIds[node.id] as OverpassNode);
+      node = dedupe<OverpassNode>(node, nodeIds[node.id] as OverpassNode);
     }
     nodeIds[node.id] = node;
   }
@@ -72,7 +72,7 @@ export function osm2geojson(
 
   for (let way of ways) {
     if (wayIds[way.id] !== undefined) {
-      way = dedup<OverpassWay>(way, wayIds[way.id] as OverpassWay);
+      way = dedupe<OverpassWay>(way, wayIds[way.id] as OverpassWay);
     }
     wayIds[way.id] = way;
 
@@ -93,7 +93,7 @@ export function osm2geojson(
   const relationIds: Record<string, OverpassRelation> = {};
   for (let rel of rels) {
     if (relationIds[rel.id]) {
-      rel = dedup<OverpassRelation>(rel, relationIds[rel.id] as OverpassRelation);
+      rel = dedupe<OverpassRelation>(rel, relationIds[rel.id] as OverpassRelation);
     }
     relationIds[rel.id] = rel;
   }

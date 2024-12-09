@@ -126,10 +126,10 @@ The service supports multiple output formats through the `OverpassOutput` enum:
 
 ```typescript
 enum OverpassOutput {
-  Raw = 'raw',                   // Raw Overpass JSON response
-  GeoJSON = 'geojson',          // Converted to GeoJSON format
-  Parsed = 'parsed',            // Parsed element tags
-  ParsedGeoJSON = 'parsedgeojson' // Parsed tags in GeoJSON format
+  Raw = 'raw',                      // Raw Overpass JSON response
+  GeoJSON = 'geojson',              // Converted to GeoJSON format
+  Parsed = 'parsed',                // Parsed element tags
+  ParsedGeoJSON = 'parsedgeojson'   // Parsed tags in GeoJSON format
 }
 ```
 

@@ -26,5 +26,16 @@ jobs:
 
       - uses: ./.github/actions/setup
 
+      - run: bun run format
+        shell: bash
+
+      - run: bun run typecheck
+        shell: bash
+
+      - run: bun run spellcheck
+
+      - run: bun run test
+        shell: bash
+
       - run: bun run build
         shell: bash
