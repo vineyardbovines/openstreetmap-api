@@ -30,6 +30,9 @@ jobs:
       - run: bun run build
         shell: bash
 
+      - run: npm config set //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+
       - run: bun run release -- --ci
         shell: bash
         env:

@@ -8,22 +8,36 @@ Zero-dependency TypeScript package for working with [openstreetmap](https://www.
 - 🌐 **API Service** - Handle overpass API requests with automatic retries and fallbacks
 - 🗺️ **GeoJSON Support** - Direct conversion to GeoJSON formats
 
+<details>
+<summary>Table of Contents</summary>
+
 - [openstreetmap-api](#openstreetmap-api)
   - [Features](#features)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
+  - [API Service](#api-service)
+    - [Configuration Options](#configuration-options)
+    - [Output Formats](#output-formats)
+    - [Error Handling](#error-handling)
+    - [Fallback Endpoints](#fallback-endpoints)
   - [Query Builder](#query-builder)
-    - [Basic Usage](#basic-usage)
     - [Tag Matching](#tag-matching)
     - [Partial Key Matching](#partial-key-matching)
     - [Geographic Filters](#geographic-filters)
       - [Bounding Box](#bounding-box)
       - [Around](#around)
-    - [Output Formats](#output-formats)
+    - [Output Formats](#output-formats-1)
     - [Complex Queries](#complex-queries)
     - [Configuration](#configuration)
-    - [Error Handling](#error-handling)
+    - [Error Handling](#error-handling-1)
+  - [Recipes](#recipes)
+    - [Find Cafes Within Walking Distance](#find-cafes-within-walking-distance)
+    - [Find Parks with Playgrounds and Water Features](#find-parks-with-playgrounds-and-water-features)
+    - [Find Cycle-Friendly Routes](#find-cycle-friendly-routes)
+    - [Find Historical Buildings by Age](#find-historical-buildings-by-age)
+    - [Count Amenities by Type](#count-amenities-by-type)
 
+</details>
 
 ## Installation
 
