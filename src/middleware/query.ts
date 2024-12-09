@@ -58,6 +58,7 @@ export class OverpassQueryBuilder {
   }
 
   public setMaxSize(bytes: number): this {
+    //  @ts-ignore
     this.options.maxsize = bytes;
     return this;
   }
@@ -183,7 +184,7 @@ export class OverpassQueryBuilder {
     return this;
   }
 
-  public withTags(filters: AdvancedTagFilter[], matchAll = true): this {
+  public withTags(filters: AdvancedTagFilter[]): this {
     if (filters.length === 0) return this;
 
     const tagFilters = filters.map((filter) => this.buildTagFilter(filter)).join("");
