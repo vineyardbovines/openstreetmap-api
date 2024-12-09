@@ -3,7 +3,6 @@ type RecurseMode = "down" | "up" | "updown" | "none";
 type TagOperator = "=" | "!=" | "~" | "!~" | ">" | "<" | ">=" | "<=";
 type TagExistence = "exists" | "not_exists";
 type RegexModifier = "case_sensitive" | "case_insensitive";
-
 type KeyMatchStrategy = "exact" | "contains" | "startsWith" | "endsWith";
 
 interface BoundingBox {
@@ -16,7 +15,7 @@ interface BoundingBox {
 type AreaIdentifier =
   | { type: "id"; id: number }
   | { type: "name"; name: string }
-  | { type: "key"; key: string; value: string } // For IATA, ISO codes etc
+  | { type: "key"; key: string; value: string }
   | { type: "tags"; tags: AdvancedTagFilter[] };
 
 interface AdvancedTagFilter extends TagFilter {
@@ -39,9 +38,9 @@ interface TagFilter {
 export class OverpassQueryBuilder {
   private query: string[] = [];
   private hasAreaSearch = false;
+  private inGroup = false;
   private options = {
     timeout: 25,
-    maxsize: 536870912,
   };
 
   constructor(options?: QueryOptions) {
@@ -65,12 +64,10 @@ export class OverpassQueryBuilder {
 
   public bbox(bounds: GeoJSON.BBox | BoundingBox): this {
     if (Array.isArray(bounds)) {
-      // GeoJSON format [west, south, east, north]
       const [west, south, east, north] = bounds;
       this.query[this.query.length - 1] +=
         `(${this.formatCoordinate(south)},${this.formatCoordinate(west)},${this.formatCoordinate(north)},${this.formatCoordinate(east)})`;
     } else {
-      // Legacy format
       this.query[this.query.length - 1] +=
         `(${this.formatCoordinate(bounds.south)},${this.formatCoordinate(bounds.west)},${this.formatCoordinate(bounds.north)},${this.formatCoordinate(bounds.east)})`;
     }
@@ -78,99 +75,31 @@ export class OverpassQueryBuilder {
   }
 
   public node(conditions?: string): this {
-    this.query.push(`node${conditions ? conditions : ""}`);
+    this.query.push(`node${conditions ? `(${conditions})` : ""}`);
     return this;
   }
 
   public way(conditions?: string): this {
-    this.query.push(`way${conditions ? conditions : ""}`);
+    this.query.push(`way${conditions ? `(${conditions})` : ""}`);
     return this;
   }
 
   public relation(conditions?: string): this {
-    this.query.push(`relation${conditions ? conditions : ""}`);
+    this.query.push(`relation${conditions ? `(${conditions})` : ""}`);
     return this;
   }
 
-  public hasExactTag(key: string, value?: string | number): this {
-    if (value !== undefined) {
-      const formattedValue = this.formatTagValue(value);
-      this.query[this.query.length - 1] += `["${key}"="${formattedValue}"]`;
-    } else {
-      this.query[this.query.length - 1] += `["${key}"]`;
-    }
+  public group(): this {
+    this.inGroup = true;
+    this.query.push("(");
     return this;
   }
 
-  public withTag(filter: AdvancedTagFilter): this {
-    const { key, operator, value, existence, regexModifier, keyMatchStrategy } = filter;
-
-    // Handle key matching strategy
-    if (keyMatchStrategy && keyMatchStrategy !== "exact") {
-      const keyRegex = this.buildKeyRegex(key, keyMatchStrategy);
-
-      if (value !== undefined) {
-        let formattedValue = this.formatTagValue(value);
-        if (operator === "~" || operator === "!~") {
-          formattedValue =
-            regexModifier === "case_insensitive" ? `(?i)${formattedValue}` : formattedValue;
-        }
-        this.query[this.query.length - 1] +=
-          `[~"${keyRegex}"${operator || "="}"${formattedValue}"]`;
-      } else {
-        this.query[this.query.length - 1] += `[~"${keyRegex}"~".*"]`;
-      }
-      return this;
+  public endGroup(): this {
+    if (this.inGroup) {
+      this.query.push(")");
+      this.inGroup = false;
     }
-
-    if (existence === "exists") {
-      this.query[this.query.length - 1] += `["${key}"]`;
-      return this;
-    }
-
-    if (existence === "not_exists") {
-      this.query[this.query.length - 1] += `[!"${key}"]`;
-      return this;
-    }
-
-    if (operator && value !== undefined) {
-      let formattedValue = this.formatTagValue(value);
-      if (operator === "~" || operator === "!~") {
-        formattedValue =
-          regexModifier === "case_insensitive" ? `(?i)${formattedValue}` : formattedValue;
-      }
-      this.query[this.query.length - 1] += `["${key}"${operator}"${formattedValue}"]`;
-    }
-
-    return this;
-  }
-
-  // New convenience method for partial key matching
-  public withPartialKey(key: string, strategy: KeyMatchStrategy = "contains"): this {
-    return this.withTag({ key, keyMatchStrategy: strategy });
-  }
-
-  public withTags(filters: AdvancedTagFilter[], matchAll = true): this {
-    if (filters.length === 0) return this;
-
-    const separator = matchAll ? "" : "|";
-    const tagFilters = filters.map((filter) => this.buildTagFilter(filter));
-    const tagGroup = `(${tagFilters.join(separator)})`;
-
-    this.query[this.query.length - 1] += tagGroup;
-    return this;
-  }
-
-  public withTagInRange(key: string, min: number, max: number): this {
-    this.query[this.query.length - 1] += `["${key}">="${min}"]["${key}"<="${max}"]`;
-    return this;
-  }
-
-  public withTagOneOf(key: string, values: (string | number)[]): this {
-    if (values.length === 0) return this;
-
-    const formattedValues = values.map((v) => this.formatTagValue(v)).join("|");
-    this.query.push(`["${key}"~"^(${formattedValues})$"]`);
     return this;
   }
 
@@ -191,55 +120,119 @@ export class OverpassQueryBuilder {
         break;
     }
 
-    // Create area search followed by area assignment
-    this.query.push(`area${areaFilter}->.searchArea`);
+    this.query.push(`area${areaFilter}`);
     this.hasAreaSearch = true;
     return this;
   }
 
-  nodesInArea(): this {
+  public waysInArea(): this {
     this.validateAreaSearch();
-    this.query.push("node(area:searchArea)");
+    if (!this.inGroup) {
+      this.group();
+    }
+    this.query.push(`  way(area)`);
     return this;
   }
 
-  waysInArea(): this {
+  public nodesInArea(): this {
     this.validateAreaSearch();
-    this.query.push("way(area:searchArea)");
+    if (!this.inGroup) {
+      this.group();
+    }
+    this.query.push(`  node(area)`);
     return this;
   }
 
-  relationsInArea(): this {
+  public relationsInArea(): this {
     this.validateAreaSearch();
-    this.query.push("relation(area:searchArea)");
+    if (!this.inGroup) {
+      this.group();
+    }
+    this.query.push(`  relation(area)`);
+    return this;
+  }
+
+  public hasTag(key: string, value?: string | number): this {
+    if (value !== undefined) {
+      const formattedValue = this.formatTagValue(value);
+      this.query[this.query.length - 1] += `["${key}"="${formattedValue}"]`;
+    } else {
+      this.query[this.query.length - 1] += `["${key}"]`;
+    }
+    return this;
+  }
+
+  public withTag(filter: AdvancedTagFilter): this {
+    if (filter.keyMatchStrategy && filter.keyMatchStrategy !== "exact") {
+      const keyRegex = this.buildKeyRegex(filter.key, filter.keyMatchStrategy);
+      if (filter.value !== undefined) {
+        let formattedValue = this.formatTagValue(filter.value);
+        if (filter.operator === "~" || filter.operator === "!~") {
+          formattedValue =
+            filter.regexModifier === "case_insensitive" ? `(?i)${formattedValue}` : formattedValue;
+        }
+        this.query[this.query.length - 1] +=
+          `[~"${keyRegex}"${filter.operator || "="}"${formattedValue}"]`;
+      } else {
+        this.query[this.query.length - 1] += `[~"${keyRegex}"~".*"]`;
+      }
+      return this;
+    }
+
+    this.query[this.query.length - 1] += this.buildTagFilter(filter);
+    return this;
+  }
+
+  public withTags(filters: AdvancedTagFilter[], matchAll = true): this {
+    if (filters.length === 0) return this;
+
+    const tagFilters = filters.map((filter) => this.buildTagFilter(filter)).join("");
+    if (this.query.length > 0) {
+      this.query[this.query.length - 1] += tagFilters;
+    }
+    return this;
+  }
+
+  public withTagOneOf(key: string, values: (string | number)[]): this {
+    if (values.length === 0) return this;
+
+    const formattedValues = values.map((v) => this.formatTagValue(v)).join("|");
+    this.query[this.query.length - 1] += `["${key}"~"^(${formattedValues})$"]`;
     return this;
   }
 
   public around(radius: number, lat: number, lon: number): this {
-    this.query.push(`(around:${radius},${lat},${lon})`);
+    if (!this.inGroup) {
+      this.group();
+    }
+    this.query.push(`  (around:${radius},${lat},${lon})`);
     return this;
   }
 
   public union(): this {
-    this.query.push("->.");
+    if (this.inGroup) {
+      this.query.push(`  ->`);
+    }
     return this;
   }
 
   public difference(): this {
-    this.query.push("->-");
+    if (this.inGroup) {
+      this.query.push(`  ->-`);
+    }
     return this;
   }
 
   public recurse(mode: RecurseMode = "down"): this {
     switch (mode) {
       case "down":
-        this.query.push(">;");
+        this.query.push(">");
         break;
       case "up":
-        this.query.push("<;");
+        this.query.push("<");
         break;
       case "updown":
-        this.query.push(">>;");
+        this.query.push(">>");
         break;
       case "none":
         break;
@@ -247,18 +240,39 @@ export class OverpassQueryBuilder {
     return this;
   }
 
-  public out(format: OutputFormat = "default", addBody = false): this {
+  public out(format: OutputFormat = "default", addBody: boolean = false): this {
     let outString = "out";
     if (format !== "default") outString += ` ${format}`;
     if (addBody) outString += " body";
-    outString += ";";
     this.query.push(outString);
     return this;
   }
 
   public build(): string {
-    const settings = `[out:json][timeout:${this.options.timeout}][maxsize:${this.options.maxsize}];`;
-    return `${settings}\n${this.query.join(" ")};\n`;
+    const settings = "[out:json];";
+
+    // Find the first 'out' statement index
+    const firstOutIndex = this.query.findIndex((part) => part.startsWith("out"));
+
+    // Create the formatted parts
+    const queryParts = [...this.query];
+
+    // If we're in a group and have an out statement, insert the closing parenthesis before it
+    if (this.inGroup && firstOutIndex !== -1) {
+      queryParts.splice(firstOutIndex, 0, ");");
+      this.inGroup = false;
+    } else if (this.inGroup) {
+      queryParts.push(");");
+    }
+
+    // Format each part
+    const formattedParts = queryParts.map((part) => {
+      if (part === "(") return part;
+      if (part === ");") return part;
+      return part + ";";
+    });
+
+    return `${settings}\n${formattedParts.join("\n")}`;
   }
 
   private formatTagValue(value: string | number): string {
@@ -282,39 +296,24 @@ export class OverpassQueryBuilder {
   }
 
   private buildTagFilter(filter: AdvancedTagFilter): string {
-    const { key, operator, value, existence, regexModifier, keyMatchStrategy } = filter;
-
-    if (keyMatchStrategy && keyMatchStrategy !== "exact") {
-      const keyRegex = this.buildKeyRegex(key, keyMatchStrategy);
-      if (value !== undefined) {
-        let formattedValue = this.formatTagValue(value);
-        if (operator === "~" || operator === "!~") {
-          formattedValue =
-            regexModifier === "case_insensitive" ? `(?i)${formattedValue}` : formattedValue;
-        }
-        return `[~"${keyRegex}"${operator || "="}"${formattedValue}"]`;
-      }
-      return `[~"${keyRegex}"~".*"]`;
+    if (filter.existence === "exists") {
+      return `["${filter.key}"]`;
     }
 
-    if (existence === "exists") {
-      return `["${key}"]`;
+    if (filter.existence === "not_exists") {
+      return `[!"${filter.key}"]`;
     }
 
-    if (existence === "not_exists") {
-      return `[!"${key}"]`;
-    }
-
-    if (operator && value !== undefined) {
-      let formattedValue = this.formatTagValue(value);
-      if (operator === "~" || operator === "!~") {
+    if (filter.operator && filter.value !== undefined) {
+      let formattedValue = this.formatTagValue(filter.value);
+      if (filter.operator === "~" || filter.operator === "!~") {
         formattedValue =
-          regexModifier === "case_insensitive" ? `(?i)${formattedValue}` : formattedValue;
+          filter.regexModifier === "case_insensitive" ? `(?i)${formattedValue}` : formattedValue;
       }
-      return `["${key}"${operator}"${formattedValue}"]`;
+      return `["${filter.key}"${filter.operator}"${formattedValue}"]`;
     }
 
-    return `["${key}"]`;
+    return `["${filter.key}"]`;
   }
 
   private formatCoordinate(num: number): string {
@@ -324,7 +323,7 @@ export class OverpassQueryBuilder {
 
   private validateAreaSearch(): void {
     if (!this.hasAreaSearch) {
-      throw new Error("No area has been defined. Call areaQuery() first.");
+      throw new Error("No area has been defined. Call area() first.");
     }
   }
 }

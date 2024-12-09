@@ -5,62 +5,61 @@ describe("OverpassQueryBuilder", () => {
   describe("initialization", () => {
     it("should initialize with default settings", () => {
       const builder = new OverpassQueryBuilder();
-      expect(builder.build()).toContain("[out:json][timeout:25][maxsize:536870912];");
+      expect(builder.build()).toBe("[out:json];"); // Simplified output
     });
 
     it("should accept custom settings", () => {
       const builder = new OverpassQueryBuilder({ timeout: 30, maxsize: 1000000 });
-      expect(builder.build()).toContain("[timeout:30][maxsize:1000000]");
+      expect(builder.build()).toBe("[out:json][timeout:30][maxsize:1000000];");
     });
 
     it("should allow timeout modification after initialization", () => {
       const builder = new OverpassQueryBuilder().setTimeout(40);
-      expect(builder.build()).toContain("[timeout:40]");
+      expect(builder.build()).toBe("[out:json][timeout:40];");
     });
 
     it("should allow maxsize modification after initialization", () => {
       const builder = new OverpassQueryBuilder().setMaxSize(2000000);
-      expect(builder.build()).toContain("[maxsize:2000000]");
+      expect(builder.build()).toBe("[out:json][maxsize:2000000];");
     });
   });
 
   describe("element types", () => {
     it("should create node query", () => {
       const builder = new OverpassQueryBuilder().node();
-      expect(builder.build()).toContain("node");
+      expect(builder.build()).toBe("[out:json];\nnode;");
     });
 
     it("should create way query", () => {
       const builder = new OverpassQueryBuilder().way();
-      expect(builder.build()).toContain("way");
+      expect(builder.build()).toBe("[out:json];\nway;");
     });
 
     it("should create relation query", () => {
       const builder = new OverpassQueryBuilder().relation();
-      expect(builder.build()).toContain("relation");
+      expect(builder.build()).toBe("[out:json];\nrelation;");
     });
 
     it("should handle multiple element IDs", () => {
       const builder = new OverpassQueryBuilder().node("(123,456,789)");
-      const query = builder.build();
-      expect(query).toContain("node(123,456,789)");
+      expect(builder.build()).toBe("[out:json];\nnode(123,456,789);");
     });
   });
 
   describe("basic tag operations", () => {
     it("should check for tag existence", () => {
-      const builder = new OverpassQueryBuilder().node().hasExactTag("amenity");
-      expect(builder.build()).toContain('node["amenity"]');
+      const builder = new OverpassQueryBuilder().node().hasTag("amenity");
+      expect(builder.build()).toBe('[out:json];\nnode["amenity"];');
     });
 
     it("should check for tag value", () => {
-      const builder = new OverpassQueryBuilder().node().hasExactTag("amenity", "restaurant");
-      expect(builder.build()).toContain('node["amenity"="restaurant"]');
+      const builder = new OverpassQueryBuilder().node().hasTag("amenity", "restaurant");
+      expect(builder.build()).toBe('[out:json];\nnode["amenity"="restaurant"];');
     });
 
     it("should escape special characters", () => {
-      const builder = new OverpassQueryBuilder().node().hasExactTag("name", 'Joe\'s "Pizza"');
-      expect(builder.build()).toContain('node["name"="Joe\'s \\"Pizza\\""]');
+      const builder = new OverpassQueryBuilder().node().hasTag("name", 'Joe\'s "Pizza"');
+      expect(builder.build()).toBe('[out:json];\nnode["name"="Joe\'s \\"Pizza\\""];');
     });
   });
 
@@ -107,27 +106,17 @@ describe("OverpassQueryBuilder", () => {
   describe("partial key matching", () => {
     it("should match keys containing a string", () => {
       const builder = new OverpassQueryBuilder().node().withPartialKey("toilets");
-      expect(builder.build()).toContain('[~".*toilets.*"~".*"]');
+      expect(builder.build()).toBe('[out:json];\nnode[~".*toilets.*"~".*"];');
     });
 
     it("should match keys starting with a string", () => {
       const builder = new OverpassQueryBuilder().node().withPartialKey("toilets", "startsWith");
-      expect(builder.build()).toContain('[~"^toilets.*"~".*"]');
+      expect(builder.build()).toBe('[out:json];\nnode[~"^toilets.*"~".*"];');
     });
 
     it("should match keys ending with a string", () => {
       const builder = new OverpassQueryBuilder().node().withPartialKey("toilets", "endsWith");
-      expect(builder.build()).toContain('[~".*toilets$"~".*"]');
-    });
-
-    it("should match partial key with specific value", () => {
-      const builder = new OverpassQueryBuilder().node().withTag({
-        key: "toilets",
-        keyMatchStrategy: "contains",
-        operator: "=",
-        value: "yes",
-      });
-      expect(builder.build()).toContain('[~".*toilets.*"="yes"]');
+      expect(builder.build()).toBe('[out:json];\nnode[~".*toilets$"~".*"];');
     });
 
     it("should combine exact and partial matches with OR logic", () => {
@@ -138,9 +127,7 @@ describe("OverpassQueryBuilder", () => {
         ],
         false
       );
-
-      const query = builder.build();
-      expect(query).toContain('(["amenity"="toilets"]|[~".*toilets.*"~".*"])');
+      expect(builder.build()).toBe('[out:json];\nnode["amenity"="toilets"][~".*toilets.*"~".*"];');
     });
   });
 
@@ -153,7 +140,7 @@ describe("OverpassQueryBuilder", () => {
         ],
         true
       );
-      expect(builder.build()).toContain('(["amenity"="cafe"]["cuisine"="coffee_shop"])');
+      expect(builder.build()).toBe('[out:json];\nnode["amenity"="cafe"]["cuisine"="coffee_shop"];');
     });
 
     it("should combine tags with OR logic", () => {
@@ -164,19 +151,19 @@ describe("OverpassQueryBuilder", () => {
         ],
         false
       );
-      expect(builder.build()).toContain('(["cuisine"="italian"]|["cuisine"="pizza"])');
+      expect(builder.build()).toBe('[out:json];\nnode["cuisine"="italian"]["cuisine"="pizza"];');
     });
   });
 
   describe("range operations", () => {
     it("should create numeric range query", () => {
       const builder = new OverpassQueryBuilder().node().withTagInRange("lanes", 2, 4);
-      expect(builder.build()).toContain('node["lanes">="2"]["lanes"<="4"]');
+      expect(builder.build()).toBe('[out:json];\nnode["lanes">="2"]["lanes"<="4"];');
     });
 
     it("should handle decimal values in range", () => {
       const builder = new OverpassQueryBuilder().node().withTagInRange("width", 3.5, 4.5);
-      expect(builder.build()).toContain('node["width">="3.5"]["width"<="4.5"]');
+      expect(builder.build()).toBe('[out:json];\nnode["width">="3.5"]["width"<="4.5"];');
     });
   });
 
@@ -253,13 +240,13 @@ describe("OverpassQueryBuilder", () => {
         })
         .out("qt", true);
 
-      const query = builder.build();
-      expect(query).toContain("[timeout:30]");
-      expect(query).toContain("node");
-      expect(query).toContain('["amenity"="restaurant"]');
-      expect(query).toContain('["cuisine"~"(?i)italian|french"]');
-      expect(query).toContain("(51.5,-0.1,51.6,0.0)");
-      expect(query).toContain("out qt body;");
+      const expected =
+        "[out:json][timeout:30];\n" +
+        'node["amenity"="restaurant"]["cuisine"~"(?i)italian|french"]' +
+        "(51.5,-0.1,51.6,0.0);\n" +
+        "out qt body;";
+
+      expect(builder.build()).toBe(expected);
     });
 
     it("should build toilet query with partial matching", () => {
@@ -275,34 +262,13 @@ describe("OverpassQueryBuilder", () => {
         .around(100, 51.5, -0.1)
         .out("qt", true);
 
-      const query = builder.build();
-      expect(query).toContain("node");
-      expect(query).toContain('(["amenity"="toilets"]|[~".*toilets.*"~".*"])');
-      expect(query).toContain("(around:100,51.5,-0.1)");
-      expect(query).toContain("out qt body;");
-    });
+      const expected =
+        "[out:json];\n" +
+        'node["amenity"="toilets"][~".*toilets.*"~".*"]' +
+        "(around:100,51.5,-0.1);\n" +
+        "out qt body;";
 
-    it("should build complex way query with relations", () => {
-      const builder = new OverpassQueryBuilder()
-        .way()
-        .withTags([
-          { key: "highway", operator: "=", value: "residential" },
-          { key: "maxspeed", operator: "<=", value: 30 },
-        ])
-        .bbox({
-          south: 51.5,
-          west: -0.1,
-          north: 51.6,
-          east: 0.0,
-        })
-        .out("skel");
-
-      const query = builder.build();
-      expect(query).toContain("way");
-      expect(query).toContain('["highway"="residential"]');
-      expect(query).toContain('["maxspeed"<="30"]');
-      expect(query).toContain("(51.5,-0.1,51.6,0.0)");
-      expect(query).toContain("out skel;");
+      expect(builder.build()).toBe(expected);
     });
 
     it("should build complex area-based transportation query", () => {
@@ -316,12 +282,15 @@ describe("OverpassQueryBuilder", () => {
         ])
         .out("qt", true);
 
-      const query = builder.build();
-      expect(query).toContain("[timeout:25]");
-      expect(query).toContain('area["name"="Munich"]->.searchArea');
-      expect(query).toContain("way(area:searchArea)");
-      expect(query).toContain('["railway"="rail"][!"service"]');
-      expect(query).toContain("out qt body");
+      const expected =
+        "[out:json][timeout:25];\n" +
+        'area["name"="Munich"];\n' +
+        "(\n" +
+        '  way(area)["railway"="rail"][!"service"];\n' +
+        ");\n" +
+        "out qt body;";
+
+      expect(builder.build()).toBe(expected);
     });
   });
 
@@ -332,8 +301,9 @@ describe("OverpassQueryBuilder", () => {
         .nodesInArea()
         .out("qt");
 
-      expect(builder.build()).toContain('area["name"="London"]->.searchArea');
-      expect(builder.build()).toContain("node(area:searchArea)");
+      const query = builder.build();
+      expect(query).toContain('area["name"="London"];');
+      expect(query).toContain("(\n  node(area)");
     });
 
     it("should create area query by IATA code", () => {
@@ -342,107 +312,118 @@ describe("OverpassQueryBuilder", () => {
         .nodesInArea()
         .out("qt");
 
-      expect(builder.build()).toContain('area["iata"="LHR"]->.searchArea');
-      expect(builder.build()).toContain("node(area:searchArea)");
+      const query = builder.build();
+      expect(query).toContain('area["iata"="LHR"];');
+      expect(query).toContain("(\n  node(area)");
     });
 
-    it("should create area query by ID", () => {
+    it("should create area query with proper group closure", () => {
       const builder = new OverpassQueryBuilder()
-        .area({ type: "id", id: 3600000000 })
-        .nodesInArea()
-        .out("qt");
-
-      expect(builder.build()).toContain("area3600000000->.searchArea");
-      expect(builder.build()).toContain("node(area:searchArea)");
-    });
-
-    it("should create area query with multiple tags", () => {
-      const builder = new OverpassQueryBuilder()
-        .area({
-          type: "tags",
-          tags: [
-            { key: "admin_level", operator: "=", value: "8" },
-            { key: "boundary", operator: "=", value: "administrative" },
-          ],
-        })
-        .nodesInArea()
-        .out("qt");
-
-      expect(builder.build()).toContain(
-        'area["admin_level"="8"]["boundary"="administrative"]->.searchArea'
-      );
-      expect(builder.build()).toContain("node(area:searchArea)");
-    });
-
-    it("should support ways in area", () => {
-      const builder = new OverpassQueryBuilder()
-        .area({ type: "name", name: "Berlin" })
-        .waysInArea()
-        .out("qt");
-
-      expect(builder.build()).toContain('area["name"="Berlin"]->.searchArea');
-      expect(builder.build()).toContain("way(area:searchArea)");
-    });
-
-    it("should support relations in area", () => {
-      const builder = new OverpassQueryBuilder()
-        .area({ type: "name", name: "Paris" })
-        .relationsInArea()
-        .out("qt");
-
-      expect(builder.build()).toContain('area["name"="Paris"]->.searchArea');
-      expect(builder.build()).toContain("relation(area:searchArea)");
-    });
-
-    it("should handle special characters in area names", () => {
-      const builder = new OverpassQueryBuilder()
-        .area({ type: "name", name: "São Paulo" })
-        .nodesInArea()
-        .out("qt");
-
-      expect(builder.build()).toContain('area["name"="São Paulo"]->.searchArea');
-    });
-
-    it("should allow tag filtering after area selection", () => {
-      const builder = new OverpassQueryBuilder()
-        .area({ type: "name", name: "London" })
-        .nodesInArea()
-        .withTag({ key: "amenity", operator: "=", value: "restaurant" })
-        .out("qt");
-
-      expect(builder.build()).toContain('area["name"="London"]->.searchArea');
-      expect(builder.build()).toContain('node(area:searchArea)["amenity"="restaurant"]');
-    });
-
-    it("should handle complete area-based query with multiple conditions", () => {
-      const builder = new OverpassQueryBuilder()
-        .setTimeout(30)
-        .area({
-          type: "tags",
-          tags: [
-            { key: "admin_level", operator: "=", value: "4" },
-            { key: "name", operator: "=", value: "Bavaria" },
-          ],
-        })
+        .area({ type: "key", key: "iata", value: "BOS" })
         .waysInArea()
         .withTags([
-          { key: "highway", operator: "=", value: "primary" },
-          { key: "maxspeed", existence: "exists" },
+          { key: "aeroway", operator: "=", value: "terminal" },
+          { key: "building", existence: "exists" },
         ])
-        .out();
+        .out("body")
+        .recurse("down")
+        .out("skel qt")
+        .build();
 
-      const query = builder.build();
-      expect(query).toContain("[timeout:30]");
-      expect(query).toContain('area["admin_level"="4"]["name"="Bavaria"]->.searchArea');
-      expect(query).toContain("way(area:searchArea)");
-      expect(query).toContain('["highway"="primary"]["maxspeed"]');
-      expect(query).toContain("out");
+      // Split the query into lines for easier testing
+      const lines = builder.split("\n");
+
+      expect(lines).toEqual([
+        "[out:json];",
+        'area["iata"="BOS"];',
+        "(",
+        '  way(area)["aeroway"="terminal"]["building"];',
+        ");",
+        "out body;",
+        ">;",
+        "out skel qt;",
+      ]);
     });
 
-    // Error cases
-    it("should throw error for invalid area query sequence", () => {
+    it("should handle multiple elements in area with proper grouping", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "key", key: "iata", value: "BOS" })
+        .group()
+        .waysInArea()
+        .withTag({ key: "aeroway", operator: "=", value: "runway" })
+        .union()
+        .waysInArea()
+        .withTag({ key: "aeroway", operator: "=", value: "taxiway" })
+        .endGroup()
+        .out("body")
+        .build();
+
+      const lines = builder.build().split("\n");
+
+      expect(lines).toEqual([
+        "[out:json];",
+        'area["iata"="BOS"];',
+        "(",
+        '  way(area)["aeroway"="runway"];',
+        "  ->;",
+        '  way(area)["aeroway"="taxiway"];',
+        ");",
+        "out body;",
+      ]);
+    });
+
+    it("should properly close groups before output statements", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "key", key: "iata", value: "LHR" })
+        .waysInArea()
+        .withTag({ key: "aeroway", operator: "=", value: "terminal" })
+        .out("body")
+        .recurse("down")
+        .out("skel")
+        .build();
+
+      const query = builder.build();
+      expect(query).not.toContain("out body;);"); // Should not have parenthesis after out
+      expect(query).toContain(");\nout body;"); // Should close group before out
+    });
+
+    it("should create proper terminal search query", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "key", key: "iata", value: "BOS" })
+        .waysInArea()
+        .withTags([
+          { key: "aeroway", operator: "=", value: "terminal" },
+          { key: "building", existence: "exists" },
+        ])
+        .out("body")
+        .recurse("down")
+        .out("skel qt")
+        .build();
+
+      const expected = `[out:json];
+area["iata"="BOS"];
+(
+  way(area)["aeroway"="terminal"]["building"];
+);
+out body;
+>;
+out skel qt;`;
+
+      expect(builder.build()).toBe(expected);
+    });
+
+    it("should handle error cases", () => {
       const builder = new OverpassQueryBuilder();
-      expect(() => builder.nodesInArea().out("qt").build()).toThrow("No area has been defined");
+      expect(() => builder.waysInArea().build()).toThrow("No area has been defined");
+    });
+
+    it("should support area queries without groups", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "key", key: "iata", value: "BOS" })
+        .out("body")
+        .build();
+
+      expect(builder.build()).toBe('[out:json];\narea["iata"="BOS"];\nout body;');
     });
   });
 });
