@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.5 (2024-12-09)</small>
+
+* fix: add area to query builder ([39e24bb](https://github.com/vineyardbovines/openstreetmap-api/commit/39e24bb))
+
 ## <small>0.1.4 (2024-12-09)</small>
 
 * chore: npm publish ([45bfbbd](https://github.com/vineyardbovines/openstreetmap-api/commit/45bfbbd))
