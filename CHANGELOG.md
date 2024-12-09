@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.2 (2024-12-09)</small>
+
+* Merge branch 'main' of github.com:vineyardbovines/openstreetmap-api ([5d5991b](https://github.com/vineyardbovines/openstreetmap-api/commit/5d5991b))
+
 ## <small>0.1.1 (2024-12-09)</small>
 
 * chore: spellcheck ([328fa86](https://github.com/vineyardbovines/openstreetmap-api/commit/328fa86))
