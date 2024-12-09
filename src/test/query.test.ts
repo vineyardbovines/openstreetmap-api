@@ -304,5 +304,145 @@ describe("OverpassQueryBuilder", () => {
       expect(query).toContain("(51.5,-0.1,51.6,0.0)");
       expect(query).toContain("out skel;");
     });
+
+    it("should build complex area-based transportation query", () => {
+      const builder = new OverpassQueryBuilder()
+        .setTimeout(25)
+        .area({ type: "name", name: "Munich" })
+        .waysInArea()
+        .withTags([
+          { key: "railway", operator: "=", value: "rail" },
+          { key: "service", existence: "not_exists" },
+        ])
+        .out("qt", true);
+
+      const query = builder.build();
+      expect(query).toContain("[timeout:25]");
+      expect(query).toContain('area["name"="Munich"]->.searchArea');
+      expect(query).toContain("way(area:searchArea)");
+      expect(query).toContain('["railway"="rail"][!"service"]');
+      expect(query).toContain("out qt body");
+    });
+  });
+
+  describe("area operations", () => {
+    it("should create area query by name", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "name", name: "London" })
+        .nodesInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain('area["name"="London"]->.searchArea');
+      expect(builder.build()).toContain("node(area:searchArea)");
+    });
+
+    it("should create area query by IATA code", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "key", key: "iata", value: "LHR" })
+        .nodesInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain('area["iata"="LHR"]->.searchArea');
+      expect(builder.build()).toContain("node(area:searchArea)");
+    });
+
+    it("should create area query by ID", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "id", id: 3600000000 })
+        .nodesInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain("area3600000000->.searchArea");
+      expect(builder.build()).toContain("node(area:searchArea)");
+    });
+
+    it("should create area query with multiple tags", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({
+          type: "tags",
+          tags: [
+            { key: "admin_level", operator: "=", value: "8" },
+            { key: "boundary", operator: "=", value: "administrative" },
+          ],
+        })
+        .nodesInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain(
+        'area["admin_level"="8"]["boundary"="administrative"]->.searchArea'
+      );
+      expect(builder.build()).toContain("node(area:searchArea)");
+    });
+
+    it("should support ways in area", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "name", name: "Berlin" })
+        .waysInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain('area["name"="Berlin"]->.searchArea');
+      expect(builder.build()).toContain("way(area:searchArea)");
+    });
+
+    it("should support relations in area", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "name", name: "Paris" })
+        .relationsInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain('area["name"="Paris"]->.searchArea');
+      expect(builder.build()).toContain("relation(area:searchArea)");
+    });
+
+    it("should handle special characters in area names", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "name", name: "São Paulo" })
+        .nodesInArea()
+        .out("qt");
+
+      expect(builder.build()).toContain('area["name"="São Paulo"]->.searchArea');
+    });
+
+    it("should allow tag filtering after area selection", () => {
+      const builder = new OverpassQueryBuilder()
+        .area({ type: "name", name: "London" })
+        .nodesInArea()
+        .withTag({ key: "amenity", operator: "=", value: "restaurant" })
+        .out("qt");
+
+      expect(builder.build()).toContain('area["name"="London"]->.searchArea');
+      expect(builder.build()).toContain('node(area:searchArea)["amenity"="restaurant"]');
+    });
+
+    it("should handle complete area-based query with multiple conditions", () => {
+      const builder = new OverpassQueryBuilder()
+        .setTimeout(30)
+        .area({
+          type: "tags",
+          tags: [
+            { key: "admin_level", operator: "=", value: "4" },
+            { key: "name", operator: "=", value: "Bavaria" },
+          ],
+        })
+        .waysInArea()
+        .withTags([
+          { key: "highway", operator: "=", value: "primary" },
+          { key: "maxspeed", existence: "exists" },
+        ])
+        .out("body");
+
+      const query = builder.build();
+      expect(query).toContain("[timeout:30]");
+      expect(query).toContain('area["admin_level"="4"]["name"="Bavaria"]->.searchArea');
+      expect(query).toContain("way(area:searchArea)");
+      expect(query).toContain('["highway"="primary"]["maxspeed"]');
+      expect(query).toContain("out body");
+    });
+
+    // Error cases
+    it("should throw error for invalid area query sequence", () => {
+      const builder = new OverpassQueryBuilder();
+      expect(() => builder.nodesInArea().out("qt").build()).toThrow("No area has been defined");
+    });
   });
 });

@@ -13,6 +13,12 @@ interface BoundingBox {
   east: number;
 }
 
+type AreaIdentifier =
+  | { type: "id"; id: number }
+  | { type: "name"; name: string }
+  | { type: "key"; key: string; value: string } // For IATA, ISO codes etc
+  | { type: "tags"; tags: AdvancedTagFilter[] };
+
 interface AdvancedTagFilter extends TagFilter {
   keyMatchStrategy?: KeyMatchStrategy;
 }
@@ -32,6 +38,7 @@ interface TagFilter {
 
 export class OverpassQueryBuilder {
   private query: string[] = [];
+  private hasAreaSearch = false;
   private options = {
     timeout: 25,
     maxsize: 536870912,
@@ -167,6 +174,47 @@ export class OverpassQueryBuilder {
     return this;
   }
 
+  public area(identifier: AreaIdentifier): this {
+    let areaFilter: string;
+    switch (identifier.type) {
+      case "id":
+        areaFilter = `${identifier.id}`;
+        break;
+      case "name":
+        areaFilter = `["name"="${this.formatTagValue(identifier.name)}"]`;
+        break;
+      case "key":
+        areaFilter = `["${identifier.key}"="${this.formatTagValue(identifier.value)}"]`;
+        break;
+      case "tags":
+        areaFilter = identifier.tags.map((filter) => this.buildTagFilter(filter)).join("");
+        break;
+    }
+
+    // Create area search followed by area assignment
+    this.query.push(`area${areaFilter}->.searchArea`);
+    this.hasAreaSearch = true;
+    return this;
+  }
+
+  nodesInArea(): this {
+    this.validateAreaSearch();
+    this.query.push("node(area:searchArea)");
+    return this;
+  }
+
+  waysInArea(): this {
+    this.validateAreaSearch();
+    this.query.push("way(area:searchArea)");
+    return this;
+  }
+
+  relationsInArea(): this {
+    this.validateAreaSearch();
+    this.query.push("relation(area:searchArea)");
+    return this;
+  }
+
   public around(radius: number, lat: number, lon: number): this {
     this.query.push(`(around:${radius},${lat},${lon})`);
     return this;
@@ -272,5 +320,11 @@ export class OverpassQueryBuilder {
   private formatCoordinate(num: number): string {
     const str = num.toString();
     return str.includes(".") ? str : `${str}.0`;
+  }
+
+  private validateAreaSearch(): void {
+    if (!this.hasAreaSearch) {
+      throw new Error("No area has been defined. Call areaQuery() first.");
+    }
   }
 }
