@@ -9,7 +9,7 @@ Zero-dependency TypeScript package for working with [openstreetmap](https://www.
 - 🗺️ **GeoJSON Support** - Direct conversion to GeoJSON formats
 
 <details>
-<summary>Table of Contents</summary>
+<summary><bold>Table of Contents</bold></summary>
 
 - [openstreetmap-api](#openstreetmap-api)
   - [Features](#features)
