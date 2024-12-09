@@ -1,0 +1,18 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      run: bun run format
+      stage_fixed: true
+    spellcheck:
+      run: bun run spellcheck
+    typecheck:
+      run: bun run typecheck
+    circular:
+      run: bun run circular:check
+
+commit-msg:
+  commands:
+    commitlint:
+      run: |
+        bunx --no -- commitlint --edit {1}

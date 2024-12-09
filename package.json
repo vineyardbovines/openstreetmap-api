@@ -1,0 +1,49 @@
+{
+  "name": "@vineyardbovines/openstreetmap-api",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "format": "bun x @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true .",
+    "typecheck": "tsc --noEmit",
+    "spellcheck": "bun x cspell . --fail-fast --gitignore --no-progress --show-suggestions --cache",
+    "release": "release-it",
+    "commit": "git-cz"
+  },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/cz-commitlint": "^19.5.0",
+    "@release-it/conventional-changelog": "^9.0.3",
+    "@types/bun": "latest",
+    "@types/geojson": "^7946.0.15",
+    "@types/osmtogeojson": "^2.2.34",
+    "commitizen": "^4.3.1",
+    "commitlint": "^19.6.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "lefthook": "^1.8.4",
+    "release-it": "^17.10.0",
+    "typescript": "latest",
+    "vitest": "^2.1.8",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "osm",
+    "openstreetmap",
+    "overpass",
+    "geojson"
+  ]
+}
