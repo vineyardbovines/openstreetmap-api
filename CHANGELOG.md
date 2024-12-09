@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.6 (2024-12-09)</small>
+
+* fix: add area to query builder ([f0ea096](https://github.com/vineyardbovines/openstreetmap-api/commit/f0ea096))
+
 ## <small>0.1.5 (2024-12-09)</small>
 
 * fix: add area to query builder ([39e24bb](https://github.com/vineyardbovines/openstreetmap-api/commit/39e24bb))
