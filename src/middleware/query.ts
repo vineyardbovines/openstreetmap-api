@@ -130,7 +130,7 @@ export class OverpassQueryBuilder {
     if (!this.inGroup) {
       this.group();
     }
-    this.query.push(`  way(area)`);
+    this.query.push("  way(area)");
     return this;
   }
 
@@ -139,7 +139,7 @@ export class OverpassQueryBuilder {
     if (!this.inGroup) {
       this.group();
     }
-    this.query.push(`  node(area)`);
+    this.query.push("  node(area)");
     return this;
   }
 
@@ -148,7 +148,7 @@ export class OverpassQueryBuilder {
     if (!this.inGroup) {
       this.group();
     }
-    this.query.push(`  relation(area)`);
+    this.query.push("  relation(area)");
     return this;
   }
 
@@ -211,14 +211,14 @@ export class OverpassQueryBuilder {
 
   public union(): this {
     if (this.inGroup) {
-      this.query.push(`  ->`);
+      this.query.push("  ->");
     }
     return this;
   }
 
   public difference(): this {
     if (this.inGroup) {
-      this.query.push(`  ->-`);
+      this.query.push("  ->-");
     }
     return this;
   }
@@ -240,7 +240,7 @@ export class OverpassQueryBuilder {
     return this;
   }
 
-  public out(format: OutputFormat = "default", addBody: boolean = false): this {
+  public out(format: OutputFormat = "default", addBody = false): this {
     let outString = "out";
     if (format !== "default") outString += ` ${format}`;
     if (addBody) outString += " body";
@@ -269,7 +269,7 @@ export class OverpassQueryBuilder {
     const formattedParts = queryParts.map((part) => {
       if (part === "(") return part;
       if (part === ");") return part;
-      return part + ";";
+      return `${part};`;
     });
 
     return `${settings}\n${formattedParts.join("\n")}`;
