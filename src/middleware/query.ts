@@ -150,7 +150,7 @@ export class OverpassQueryBuilder {
     return this.withTag({ key, keyMatchStrategy: strategy });
   }
 
-  public withTags(filters: AdvancedTagFilter[], matchAll: boolean = true): this {
+  public withTags(filters: AdvancedTagFilter[], matchAll = true): this {
     if (filters.length === 0) return this;
 
     const separator = matchAll ? "" : "|";
@@ -247,7 +247,7 @@ export class OverpassQueryBuilder {
     return this;
   }
 
-  public out(format: OutputFormat = "default", addBody: boolean = false): this {
+  public out(format: OutputFormat = "default", addBody = false): this {
     let outString = "out";
     if (format !== "default") outString += ` ${format}`;
     if (addBody) outString += " body";

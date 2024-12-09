@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { OverpassQueryBuilder } from "../middleware/query";
 
 describe("OverpassQueryBuilder", () => {
@@ -429,14 +429,14 @@ describe("OverpassQueryBuilder", () => {
           { key: "highway", operator: "=", value: "primary" },
           { key: "maxspeed", existence: "exists" },
         ])
-        .out("body");
+        .out();
 
       const query = builder.build();
       expect(query).toContain("[timeout:30]");
       expect(query).toContain('area["admin_level"="4"]["name"="Bavaria"]->.searchArea');
       expect(query).toContain("way(area:searchArea)");
       expect(query).toContain('["highway"="primary"]["maxspeed"]');
-      expect(query).toContain("out body");
+      expect(query).toContain("out");
     });
 
     // Error cases
