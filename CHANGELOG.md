@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.3 (2024-12-09)</small>
+
+* chore: license ([ed1d50d](https://github.com/vineyardbovines/openstreetmap-api/commit/ed1d50d))
+
 ## <small>0.1.2 (2024-12-09)</small>
 
 * Merge branch 'main' of github.com:vineyardbovines/openstreetmap-api ([5d5991b](https://github.com/vineyardbovines/openstreetmap-api/commit/5d5991b))
