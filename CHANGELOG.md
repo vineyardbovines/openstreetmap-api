@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.4 (2024-12-09)</small>
+
+* chore: npm publish ([45bfbbd](https://github.com/vineyardbovines/openstreetmap-api/commit/45bfbbd))
+
 ## <small>0.1.3 (2024-12-09)</small>
 
 * chore: license ([ed1d50d](https://github.com/vineyardbovines/openstreetmap-api/commit/ed1d50d))
