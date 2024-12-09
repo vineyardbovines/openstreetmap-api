@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.1 (2024-12-09)</small>
+
+* chore: spellcheck ([328fa86](https://github.com/vineyardbovines/openstreetmap-api/commit/328fa86))
+
 ## 0.1.0 (2024-12-09)
 
 * feat: publish ([df6d1b0](https://github.com/vineyardbovines/openstreetmap-api/commit/df6d1b0))
