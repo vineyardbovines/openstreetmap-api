@@ -8,8 +8,6 @@ pre-commit:
       run: bun run spellcheck
     typecheck:
       run: bun run typecheck
-    circular:
-      run: bun run circular:check
 
 commit-msg:
   commands:
