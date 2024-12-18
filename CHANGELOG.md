@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.1.7 (2024-12-18)</small>
+
+* chore: update user-agent ([71122c9](https://github.com/vineyardbovines/openstreetmap-api/commit/71122c9))
+
 ## <small>0.1.6 (2024-12-09)</small>
 
 * fix: add area to query builder ([f0ea096](https://github.com/vineyardbovines/openstreetmap-api/commit/f0ea096))
