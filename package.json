@@ -31,7 +31,6 @@
     "commitlint": "^19.6.0",
     "cz-conventional-changelog": "^3.3.0",
     "lefthook": "^1.8.4",
-    "overpass-ts": "^4.3.8",
     "release-it": "^17.10.0",
     "typescript": "latest",
     "vitest": "^2.1.8",

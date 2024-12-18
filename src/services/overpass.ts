@@ -51,7 +51,7 @@ export async function overpass<T extends OverpassOutput = OverpassOutput.Raw>(
   const opts = {
     endpoint: OverpassEndpoint.Main,
     verbose: false,
-    userAgent: "overpass-ts",
+    userAgent: "overpass",
     retry: defaultRetryOptions,
     ...OverpassFetchOptions,
   };
